@@ -27,6 +27,16 @@ export function cardToString(card: Card): string {
   return RANK_LABELS[card.rank - 1] + SUIT_SYMBOLS[card.suit];
 }
 
+/** Rank as shown on the card: "A", "2" ... "10", "J", "Q", "K". */
+export function rankLabel(card: Card): string {
+  return RANK_LABELS[card.rank - 1];
+}
+
+/** Plain-text code for saving and exporting: "5H", "10S", "JD". parseCard reads it back. */
+export function cardCode(card: Card): string {
+  return RANK_LABELS[card.rank - 1] + card.suit;
+}
+
 export function cardsToString(cards: readonly Card[]): string {
   return cards.map(cardToString).join(' ');
 }

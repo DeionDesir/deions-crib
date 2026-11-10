@@ -67,6 +67,8 @@ export interface GameState {
   dealer: Player;
   handNumber: number;
   scores: [number, number];
+  /** Each player's back peg: their score before their most recent points. */
+  backPegs: [number, number];
   /** Each player's cards: six after the deal, four after discarding. */
   hands: [Card[], Card[]];
   crib: Card[];
@@ -97,6 +99,7 @@ export function newGame(options: NewGameOptions = {}): GameState {
     dealer: 0,
     handNumber: 0,
     scores: [0, 0],
+    backPegs: [0, 0],
     hands: [[], []],
     crib: [],
     stock: [],
@@ -276,6 +279,7 @@ function playable(s: GameState, player: Player): Card[] {
  */
 function addPoints(s: GameState, player: Player, points: number, reason: ScoreReason): boolean {
   if (points <= 0) return false;
+  s.backPegs[player] = s.scores[player];
   s.scores[player] = Math.min(s.scores[player] + points, s.rules.targetScore);
   s.events.push({ type: 'score', player, points, reason, scores: [...s.scores] });
   if (s.scores[player] < s.rules.targetScore) return false;

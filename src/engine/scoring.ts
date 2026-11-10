@@ -48,9 +48,10 @@ export function scoreHand(
 ): HandScore {
   const all = [...hand, starter];
   const items: HandScoreItem[] = [];
+  const combos = subsets(all, 2);
 
   // Fifteens: every combination of cards adding up to 15.
-  for (const subset of subsets(all, 2)) {
+  for (const subset of combos) {
     if (subset.reduce((sum, c) => sum + cardValue(c), 0) === 15) {
       items.push({ kind: 'fifteen', points: rules.points.fifteen, cards: subset });
     }
@@ -68,7 +69,7 @@ export function scoreHand(
   // Runs: only the longest run length counts, once per distinct combination.
   // (3-3-4-5 is two runs of three; 3-4-5-6 is one run of four, not two of three.)
   for (let size = all.length; size >= 3; size--) {
-    const runs = subsets(all, size).filter((s) => s.length === size && isRun(s));
+    const runs = combos.filter((s) => s.length === size && isRun(s));
     if (runs.length > 0) {
       for (const run of runs) items.push({ kind: 'run', points: size, cards: run });
       break;

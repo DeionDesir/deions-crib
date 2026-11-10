@@ -181,6 +181,14 @@ describe('winning', () => {
     expect(done.events.filter((e) => e.type === 'show')).toHaveLength(1);
   });
 
+  it('moves the back peg to the old score each time points are added', () => {
+    // K (10), Q (20), 9 (29) and a go: player 0 scores 1 from 5.
+    const state = play(peggingGame('KS 9S 8S 7S', 'QH 8H 7H 6H', { scores: [5, 0] }), 'KS QH 9S');
+    expect(state.scores[0]).toBe(6);
+    expect(state.backPegs[0]).toBe(5);
+    expect(state.backPegs[1]).toBe(0);
+  });
+
   it('never scores past the target', () => {
     const state = play(peggingGame('7S 9S 8S KS', '7H KH 8H 6H', { scores: [120, 0] }), '7S 7H 8S');
     // Player 1 pairs the seven; player 0's eight scores nothing.

@@ -1,12 +1,14 @@
 // Text version of the game, for trying out the rules engine in a terminal.
 //
-//   npm run play                  you against the basic bot
+//   npm run play                  you against the CPU
 //   npm run play -- --seed 42     same shuffles every time
-//   npm run play -- --auto        the bot plays both sides and prints the game
+//   npm run play -- --level hard  easy, normal (default) or hard
+//   npm run play -- --auto        the CPU plays both sides and prints the game
 
 import * as readline from 'node:readline/promises';
-import { chooseDiscard, choosePlay } from '../ai/basicBot';
+import { DIFFICULTIES, Difficulty, chooseDiscard, choosePlay } from '../ai/cpu';
 import { drawCards } from './cardArt';
+import { drawPegboard } from './pegboard';
 import {
   Card,
   GameEvent,
@@ -27,6 +29,8 @@ const args = process.argv.slice(2);
 const auto = args.includes('--auto');
 const seedIndex = args.indexOf('--seed');
 const seed = seedIndex >= 0 ? Number(args[seedIndex + 1]) : undefined;
+const levelArg = args[args.indexOf('--level') + 1] as Difficulty;
+const level: Difficulty = args.includes('--level') && DIFFICULTIES.includes(levelArg) ? levelArg : 'normal';
 
 const HUMAN: Player = 0;
 const NAMES = auto ? ['Bot A', 'Bot B'] : ['You', 'CPU'];
@@ -93,6 +97,10 @@ function printNewEvents(state: GameState): void {
   printed = state.events.length;
 }
 
+function showBoard(state: GameState): void {
+  console.log('\n' + drawPegboard(state, NAMES));
+}
+
 const numberLabels = (cards: readonly Card[]) => cards.map((_, i) => `[${i + 1}]`);
 
 /** The starter and the cards played since the count last reset, with who played each. */
@@ -125,12 +133,13 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log("DEION'S CRIB - text mode");
+  console.log(`DEION'S CRIB - text mode (CPU level: ${level})`);
   let state = newGame({ seed });
   printNewEvents(state);
 
   while (state.phase !== 'gameover') {
     if (state.phase === 'handover') {
+      showBoard(state);
       if (rl) await rl.question('\nPress Enter for the next hand...');
       state = nextHand(state);
     } else if (state.phase === 'discard') {
@@ -139,9 +148,10 @@ async function main(): Promise<void> {
           const hand = [...state.hands[player]].sort((a, b) => a.rank - b.rank);
           const crib = state.dealer === HUMAN ? 'your crib' : "the CPU's crib";
           console.log(`\nYour hand:\n${drawCards(hand, { labels: numberLabels(hand) })}`);
+          showBoard(state);
           state = discard(state, player, await pick(`Discard two to ${crib} (e.g. "1 4"): `, hand, 2));
         } else {
-          state = discard(state, player, chooseDiscard(state, player));
+          state = discard(state, player, chooseDiscard(state, player, level));
         }
         printNewEvents(state);
       }
@@ -157,6 +167,7 @@ async function main(): Promise<void> {
           labels: numberLabels(hand),
           dimmed: hand.map((c) => !legal.some((l) => sameCard(l, c))),
         }));
+        showBoard(state);
         let card: Card;
         for (;;) {
           [card] = await pick('Play a card: ', hand, 1);
@@ -165,12 +176,13 @@ async function main(): Promise<void> {
         }
         state = playCard(state, player, card);
       } else {
-        state = playCard(state, player, choosePlay(state, player));
+        state = playCard(state, player, choosePlay(state, player, level));
       }
     }
     printNewEvents(state);
   }
 
+  showBoard(state);
   console.log(`Final score: ${name(0)} ${state.scores[0]} - ${name(1)} ${state.scores[1]}`);
   rl?.close();
 }

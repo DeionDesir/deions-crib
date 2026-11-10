@@ -2,7 +2,7 @@
 
 A cribbage game with Game Boy-era visuals, playable in the browser on phone and desktop.
 
-Right now the repo holds the rules engine and a text version of the game for testing it.
+You play one-on-one against the computer at three levels, with a pegboard, records of your games, three color themes and sound. There is also a text version for the terminal.
 
 ## How to play cribbage
 
@@ -131,9 +131,9 @@ The highest possible hand is **29**: three 5s and a jack in hand, with the fourt
 
 ## For developers
 
-### Setup
+The game is written in TypeScript and built with [Vite](https://vite.dev). It needs [Node.js](https://nodejs.org) 20 or newer.
 
-Needs [Node.js](https://nodejs.org) 20 or newer.
+### Setup
 
 ```
 npm install
@@ -143,11 +143,24 @@ npm install
 
 | Command | What it does |
 | --- | --- |
-| `npm test` | Runs the rules tests |
-| `npm run play` | Text game: you against a basic bot |
-| `npm run play -- --seed 42` | Same shuffles every time |
-| `npm run play -- --auto` | The bot plays both sides and prints the whole game |
-| `npm run typecheck` | Checks the TypeScript types |
+| `npm run dev` | Runs the game at http://localhost:5173 and reloads as you edit |
+| `npm run build` | Checks the types and builds the finished site into `dist/` |
+| `npm run preview` | Serves the built site, to try it exactly as it will be published |
+| `npm test` | Runs the rules, CPU and records tests |
+| `npm run play` | Text version in the terminal: you against the CPU |
+| `npm run play -- --level hard` | Text version at another CPU level (`easy`, `normal`, `hard`) |
+| `npm run play -- --seed 42` | Text version with the same shuffles every time |
+| `npm run play -- --auto` | The CPU plays both sides and prints the whole game |
+
+To try the dev version on your phone, run `npm run dev -- --host` and open the "Network" address it prints, with the phone on the same Wi-Fi.
+
+### Publishing
+
+Every push to `main` runs the tests, builds the site and publishes it to GitHub Pages (see `.github/workflows/deploy.yml`).
+
+One-time setup: on GitHub, open the repo's **Settings > Pages** and set **Source** to **GitHub Actions**. The game then lives at `https://<your-username>.github.io/deions-crib/`.
+
+Once it is open on a phone, "Add to Home Screen" installs it like an app, and it keeps working offline.
 
 ### Layout
 
@@ -157,6 +170,20 @@ npm install
 | `src/engine/rules.ts` | The numbers that define standard cribbage (characters will swap these later) |
 | `src/engine/scoring.ts` | Hand, crib and pegging scoring |
 | `src/engine/game.ts` | Game flow: deal, discard, starter, pegging, show, win |
-| `src/ai/basicBot.ts` | Placeholder computer player |
-| `src/cli/play.ts` | Text version of the game |
-| `tests/` | Rules tests |
+| `src/ai/cpu.ts` | The computer player: easy, normal and hard |
+| `src/stats/records.ts` | Turns finished games into records and stats |
+| `src/web/main.ts` | Starts the web app and switches screens |
+| `src/web/game.ts` | The game screen |
+| `src/web/screens.ts` | Title, settings, records and how-to-play screens |
+| `src/web/skin.ts` | How cards look (pixel grids for suits and face cards) |
+| `src/web/pegboard.ts` | Draws the pegboard |
+| `src/web/styles.css` | Layout and the color themes |
+| `src/web/sound.ts` | Sound effects |
+| `src/web/storage.ts` | Saved settings, game in progress and records |
+| `src/cli/` | Text version of the game for the terminal |
+| `tests/` | Tests |
+| `public/` | App icons |
+
+### Records and exported data
+
+Finished games are saved in the browser on the device they were played on. **Records > Export as JSON** downloads all of them. Each game lists every hand: who dealt, the starter, and for each player the cards kept, the discards, and the points from pegging, hand and crib.
